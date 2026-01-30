@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messenger - Admin Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #18191a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #chat-container { width: 100%; max-width: 450px; height: 90vh; background: #242526; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 12px 28px rgba(0,0,0,0.2); overflow: hidden; border: 1px solid #3e4042; }
+        
+        /* Header */
+        .header { background: #242526; padding: 15px; color: white; border-bottom: 1px solid #3e4042; text-align: center; font-weight: bold; }
+        
+        /* Messages Area */
+        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; background: #18191a; }
+        .msg { margin-bottom: 8px; padding: 10px 16px; border-radius: 18px; font-size: 15px; max-width: 80%; line-height: 1.4; }
+        
+        /* Admin Messages (Right) */
+        .sent { align-self: flex-end; background-color: #0084ff; color: white; border-bottom-right-radius: 4px; }
+        
+        /* User Messages (Left) */
+        .received { align-self: flex-start; background-color: #3e4042; color: #e4e6eb; border-bottom-left-radius: 4px; }
+        
+        /* Input Area */
+        #input-area { padding: 15px; display: flex; background: #242526; border-top: 1px solid #3e4042; }
+        input { flex: 1; padding: 12px; border: none; border-radius: 20px; outline: none; background: #3a3b3c; color: white; padding-left: 15px; }
+        button { background: none; border: none; color: #0084ff; font-weight: bold; margin-left: 10px; cursor: pointer; font-size: 16px; }
+        button:hover { color: #4092ff; }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div class="header">Admin Panel (Replying to User)</div>
+    <div id="messages"></div>
+    <div id="input-area">
+        <input type="text" id="adminInput" placeholder="Write a reply..." autocomplete="off">
+        <button onclick="sendReply()">Reply</button>
+    </div>
+</div>
+
+<script>
+    // 1. Tomar Firebase Config eikhane boshau (Ager tai)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. Admin theke Reply pathano
+    function sendReply() {
+        const msgText = document.getElementById('adminInput').value;
+        if (msgText.trim() !== "") {
+            db.ref("messages").push().set({
+                text: msgText,
+                sender: "admin", // Admin sender mark kora holo
+                timestamp: Date.now()
+            });
+            document.getElementById('adminInput').value = "";
+        }
+    }
+
+    // Enter key press korle message jabe
+    document.getElementById("adminInput").addEventListener("keyup", function(event) {
+        if (event.key === "Enter") { sendReply(); }
+    });
+
+    // 3. Messages Live Update
+    db.ref("messages").on("child_added", (snapshot) => {
+        const data = snapshot.val();
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("msg");
+        
+        // Logic: Admin-er kache admin-er message 'sent', user-er message 'received'
+        if (data.sender === "admin") {
+            messageDiv.classList.add("sent");
+        } else {
+            messageDiv.classList.add("received");
+        }
+        
+        messageDiv.innerText = data.text;
+        document.getElementById("messages").appendChild(messageDiv);
+        
+        // Auto scroll
+        const chatBox = document.getElementById("messages");
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+
+</body>
+</html>
