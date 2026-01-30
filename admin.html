@@ -1,67 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>Admin Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messenger - Admin Panel</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #1c1e21; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #chat-container { width: 100%; max-width: 400px; height: 85vh; background: #242526; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #333; }
-        .header { padding: 15px; color: white; text-align: center; border-bottom: 1px solid #333; font-weight: bold; }
-        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; background: #1c1e21; }
-        .msg { margin-bottom: 10px; padding: 10px 14px; border-radius: 18px; font-size: 14px; max-width: 75%; }
-        .sent { align-self: flex-end; background-color: #0084ff; color: white; border-bottom-right-radius: 4px; }
-        .received { align-self: flex-start; background-color: #3e4042; color: white; border-bottom-left-radius: 4px; }
-        #input-area { padding: 15px; display: flex; border-top: 1px solid #333; }
-        input { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; background: #3a3b3c; color: white; }
-        button { background: none; border: none; color: #0084ff; font-weight: bold; margin-left: 10px; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; background: #18191a; margin: 0; display: flex; justify-content: center; height: 100vh; }
+        #chat-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; background: #242526; border: 1px solid #333; }
+        #header { background: #333; color: white; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #444; }
+        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
+        .msg { margin-bottom: 10px; padding: 10px 15px; border-radius: 20px; font-size: 14px; max-width: 75%; }
+        .sent { align-self: flex-end; background: #0084ff; color: white; border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: #3a3b3c; color: white; border-bottom-left-radius: 2px; }
+        #input-area { display: flex; padding: 10px; border-top: 1px solid #444; }
+        input { flex: 1; padding: 12px; border: none; border-radius: 25px; outline: none; background: #3a3b3c; color: white; }
+        button { background: none; border: none; color: #0084ff; font-weight: bold; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
     <div id="chat-container">
-        <div class="header">Admin Chat Panel</div>
+        <div id="header">Admin Panel</div>
         <div id="messages"></div>
         <div id="input-area">
-            <input type="text" id="adminInput" placeholder="Reply as Admin..." autocomplete="off">
-            <button onclick="sendReply()">Reply</button>
+            <input type="text" id="msgInput" placeholder="Reply..." onkeypress="if(event.key==='Enter')send()">
+            <button onclick="send()">Reply</button>
         </div>
     </div>
 
     <script>
-        // *** EIKHANEI EKI FIREBASE CONFIG BOSHATE HOBE ***
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        const firebaseConfig = { databaseURL: "https://messenger-demo-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function sendReply() {
-            const input = document.getElementById('adminInput');
-            if (input.value.trim() !== "") {
-                db.ref("messages").push().set({
-                    text: input.value,
-                    sender: "admin",
-                    time: Date.now()
-                });
+        function send() {
+            const input = document.getElementById('msgInput');
+            if(input.value.trim() !== "") {
+                db.ref("chats").push({ text: input.value, sender: "admin" });
                 input.value = "";
             }
         }
 
-        db.ref("messages").on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            const messageDiv = document.createElement("div");
-            // Admin-er kache Adminer message hobe 'sent'
-            messageDiv.classList.add("msg", data.sender === "admin" ? "sent" : "received");
-            messageDiv.innerText = data.text;
-            document.getElementById("messages").appendChild(messageDiv);
+        db.ref("chats").on("child_added", (snap) => {
+            const data = snap.val();
+            const div = document.createElement("div");
+            div.classList.add("msg", data.sender === "admin" ? "sent" : "received");
+            div.innerText = data.text;
+            document.getElementById("messages").appendChild(div);
             document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
         });
     </script>
