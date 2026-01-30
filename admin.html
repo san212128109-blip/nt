@@ -1,43 +1,140 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Panel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Chat App</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #eef2f5; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h2 { text-align: center; color: #2c3e50; }
+    
+    #messages { margin-top: 20px; }
+    
+    .message-card { 
+      border: none; 
+      margin-bottom: 20px; 
+      padding: 20px; 
+      background: #fff; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .message-card:hover { transform: translateY(-3px); }
+    
+    .user-text { font-size: 1.1em; margin-bottom: 10px; }
+    .reply-text { color: #007bff; font-weight: 500; margin-bottom: 15px; background: #f0f7ff; padding: 10px; border-radius: 6px; }
+    
+    .reply-section { display: flex; gap: 10px; }
+    input { 
+      flex: 1; 
+      padding: 12px; 
+      border: 1px solid #ddd; 
+      border-radius: 8px; 
+      outline: none;
+    }
+    input:focus { border-color: #007bff; }
+    
+    button { 
+      padding: 10px 20px; 
+      cursor: pointer; 
+      background: #007bff; 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      font-weight: bold;
+    }
+    button:hover { background: #0056b3; }
+    
+    .loading { text-align: center; font-style: italic; color: #777; }
+  </style>
 </head>
 <body>
-  <h2>Admin Panel</h2>
-  <div id="messages"></div>
+
+  <div class="container">
+    <h2>Admin Management Panel</h2>
+    <hr>
+    <div id="messages" class="loading">Fetching data from Render...</div>
+  </div>
 
   <script>
+    // আপনার প্রোভাইড করা Render URL
+    const BASE_URL = "https://chat-app-nt.onrender.com"; 
+
+    // মেসেজ লোড করার ফাংশন
     function loadMessages() {
-      fetch("http://localhost:3000/messages")
-        .then(res => res.json())
+      fetch(`${BASE_URL}/messages`)
+        .then(res => {
+          if (!res.ok) throw new Error("Could not connect to server");
+          return res.json();
+        })
         .then(data => {
-          document.getElementById("messages").innerHTML = "";
+          const container = document.getElementById("messages");
+          container.classList.remove("loading");
+          container.innerHTML = "";
+          
+          if (!data || data.length === 0) {
+            container.innerHTML = "<p style='text-align:center;'>No messages yet.</p>";
+            return;
+          }
+
           data.forEach(m => {
-            document.getElementById("messages").innerHTML += `
-              <div style="border:1px solid #000; margin:10px; padding:10px">
-                <p><b>User:</b> ${m.text}</p>
-                <p><b>Reply:</b> ${m.reply || "No reply yet"}</p>
-                <input id="r${m.id}" placeholder="Reply"/>
-                <button onclick="reply(${m.id})">Send</button>
+            container.innerHTML += `
+              <div class="message-card">
+                <div class="user-text"><b>User:</b> ${m.text}</div>
+                <div class="reply-text">
+                  <b>Admin Reply:</b> ${m.reply || "Waiting for your response..."}
+                </div>
+                <div class="reply-section">
+                  <input id="r${m.id}" placeholder="Write a reply..." />
+                  <button onclick="reply(${m.id})">Send</button>
+                </div>
               </div>
             `;
           });
+        })
+        .catch(err => {
+          console.error("Error:", err);
+          document.getElementById("messages").innerHTML = 
+            `<p style="color:red; text-align:center;">Error: Backend-এ কানেক্ট হতে পারছে না। সার্ভারটি সজাগ (Wake up) আছে কি না চেক করুন।</p>`;
         });
     }
 
+    // রিপ্লাই পাঠানোর ফাংশন
     function reply(id) {
-      fetch("http://localhost:3000/reply", {
+      const replyInput = document.getElementById("r" + id);
+      const replyText = replyInput.value;
+
+      if (!replyText.trim()) {
+        alert("Please write something before sending!");
+        return;
+      }
+
+      fetch(`${BASE_URL}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id,
-          reply: document.getElementById("r" + id).value
+          id: id,
+          reply: replyText
         })
-      }).then(loadMessages);
+      })
+      .then(res => {
+        if (res.ok) {
+          replyInput.value = ""; 
+          loadMessages(); // লিস্ট রিফ্রেশ করা
+        } else {
+          alert("Failed to send reply. Server error.");
+        }
+      })
+      .catch(err => {
+        alert("Error sending reply. Check console.");
+        console.error(err);
+      });
     }
 
+    // পেজ খোলার সাথে সাথে মেসেজ লোড হবে
     loadMessages();
   </script>
+
 </body>
 </html>
