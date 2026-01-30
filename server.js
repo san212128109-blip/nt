@@ -3,35 +3,48 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 
 const app = express();
+
+// CORS কনফিগারেশন - এটি আপনার ফ্রন্টএন্ডকে ডাটা এক্সেস করতে দিবে
 app.use(cors());
 app.use(bodyParser.json());
 
 let messages = [];
 
-// user sends message
+// ১. ইউজার মেসেজ পাঠাবে
 app.post("/send", (req, res) => {
   const { text } = req.body;
-  messages.push({
+  if (!text) return res.status(400).json({ error: "Text is required" });
+
+  const newMessage = {
     id: Date.now(),
     text,
     reply: ""
-  });
-  res.json({ success: true });
+  };
+  messages.push(newMessage);
+  res.json({ success: true, message: "Message received!" });
 });
 
-// admin gets messages
+// ২. অ্যাডমিন প্যানেলের জন্য সব মেসেজ গেট করা
 app.get("/messages", (req, res) => {
   res.json(messages);
 });
 
-// admin replies
+// ৩. অ্যাডমিন রিপ্লাই দিবে
 app.post("/reply", (req, res) => {
   const { id, reply } = req.body;
-  const msg = messages.find(m => m.id === id);
-  if (msg) msg.reply = reply;
-  res.json({ success: true });
+  const msg = messages.find(m => m.id === Number(id) || m.id === id);
+  
+  if (msg) {
+    msg.reply = reply;
+    return res.json({ success: true });
+  }
+  
+  res.status(404).json({ error: "Message not found" });
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+// ৪. গুরুত্বপূর্ণ পরিবর্তন: Render এর পোর্টের জন্য dynamic port সেট করা
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
