@@ -1,72 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Messenger</title>
   <style>
-    body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
-    .chat-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-    h2 { color: #0084ff; margin-bottom: 20px; }
-    input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
-    input:focus { border-color: #0084ff; }
-    button { width: 100%; padding: 12px; background-color: #0084ff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    button:hover { background-color: #0073e6; }
-    .status { margin-top: 10px; font-size: 14px; color: #666; }
+    body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f4f4; }
+    .box { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input { padding: 10px; width: 200px; border-radius: 5px; border: 1px solid #ddd; }
+    button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
-
-  <div class="chat-box">
-    <h2>Messenger</h2>
-    <input id="msg" placeholder="Type your message here..." />
-    <button id="sendBtn" onclick="sendMsg()">Send Message</button>
-    <div id="status" class="status"></div>
+  <div class="box">
+    <h2>Send Message</h2>
+    <input id="msg" placeholder="Type here..." />
+    <button onclick="sendMsg()">Send</button>
+    <p id="status"></p>
   </div>
 
   <script>
-    // আপনার Render ব্যাকএন্ড লিঙ্ক
-    const BASE_URL = "https://chat-app-nt.onrender.com"; 
-
-    function sendMsg() {
-      const msgInput = document.getElementById("msg");
-      const statusDiv = document.getElementById("status");
-      const sendBtn = document.getElementById("sendBtn");
-      const text = msgInput.value;
-
-      if (!text.trim()) {
-        alert("Please type something!");
-        return;
+    const API = "https://chat-app-nt.onrender.com";
+    async function sendMsg() {
+      const text = document.getElementById("msg").value;
+      const status = document.getElementById("status");
+      status.innerText = "Sending...";
+      try {
+        await fetch(`${API}/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        status.innerText = "Sent Successfully!";
+        document.getElementById("msg").value = "";
+      } catch (e) {
+        status.innerText = "Error: Server waking up...";
       }
-
-      // বাটন ডিজেবল করা যাতে বারবার ক্লিক না হয়
-      sendBtn.disabled = true;
-      statusDiv.innerText = "Sending...";
-
-      fetch(`${BASE_URL}/send`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text })
-      })
-      .then(res => {
-        if (res.ok) {
-          statusDiv.style.color = "green";
-          statusDiv.innerText = "Message sent successfully!";
-          msgInput.value = ""; // বক্স খালি করা
-        } else {
-          throw new Error("Failed to send");
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        statusDiv.style.color = "red";
-        statusDiv.innerText = "Error! Server might be sleeping.";
-      })
-      .finally(() => {
-        sendBtn.disabled = false;
-        // ৩ সেকেন্ড পর স্ট্যাটাস মেসেজ সরিয়ে ফেলা
-        setTimeout(() => { statusDiv.innerText = ""; }, 3000);
-      });
     }
   </script>
 </body>
