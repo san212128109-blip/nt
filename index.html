@@ -20,34 +20,41 @@
 </head>
 <body>
     <div id="chat-container">
-        <div id="header">Support Chat</div>
+        <div id="header">User Chat</div>
         <div id="messages"></div>
         <div id="input-area">
-            <input type="text" id="msgInput" placeholder="Aa" onkeypress="if(event.key==='Enter')send()">
+            <input type="text" id="msgInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter')send()">
             <button onclick="send()">Send</button>
         </div>
     </div>
 
     <script>
-        const firebaseConfig = { databaseURL: "https://messenger-demo-default-rtdb.firebaseio.com/" };
+        // Ami eikhane ekta active database URL bosiye diyechi
+        const firebaseConfig = { 
+            databaseURL: "https://simple-chat-8b5d5-default-rtdb.firebaseio.com/" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
         function send() {
             const input = document.getElementById('msgInput');
             if(input.value.trim() !== "") {
-                db.ref("chats").push({ text: input.value, sender: "user" });
+                db.ref("global_chats").push({ text: input.value, sender: "user" });
                 input.value = "";
             }
         }
 
-        db.ref("chats").on("child_added", (snap) => {
-            const data = snap.val();
-            const div = document.createElement("div");
-            div.classList.add("msg", data.sender === "user" ? "sent" : "received");
-            div.innerText = data.text;
-            document.getElementById("messages").appendChild(div);
-            document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+        db.ref("global_chats").on("value", (snap) => {
+            const box = document.getElementById("messages");
+            box.innerHTML = "";
+            snap.forEach(child => {
+                const data = child.val();
+                const div = document.createElement("div");
+                div.classList.add("msg", data.sender === "user" ? "sent" : "received");
+                div.innerText = data.text;
+                box.appendChild(div);
+            });
+            box.scrollTop = box.scrollHeight;
         });
     </script>
 </body>
