@@ -1,61 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Panel</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #18191a; margin: 0; display: flex; justify-content: center; height: 100vh; }
-        #chat-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; background: #242526; }
-        #header { background: #333; color: white; padding: 15px; text-align: center; font-weight: bold; border-bottom: 1px solid #444; }
-        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
-        .msg { margin-bottom: 10px; padding: 10px 15px; border-radius: 20px; font-size: 14px; max-width: 75%; }
-        .sent { align-self: flex-end; background: #0084ff; color: white; border-bottom-right-radius: 2px; }
-        .received { align-self: flex-start; background: #3a3b3c; color: white; border-bottom-left-radius: 2px; }
-        #input-area { display: flex; padding: 10px; border-top: 1px solid #444; }
-        input { flex: 1; padding: 12px; border: none; border-radius: 25px; outline: none; background: #3a3b3c; color: white; }
-        button { background: none; border: none; color: #0084ff; font-weight: bold; cursor: pointer; margin-left: 10px; }
-    </style>
+  <title>Admin Panel</title>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="header">Admin Panel</div>
-        <div id="messages"></div>
-        <div id="input-area">
-            <input type="text" id="msgInput" placeholder="Reply to user..." onkeypress="if(event.key==='Enter')send()">
-            <button onclick="send()">Reply</button>
-        </div>
-    </div>
+  <h2>Admin Panel</h2>
+  <div id="messages"></div>
 
-    <script>
-        // Duti file-ei EXACTLY EKI URL thakte hobe
-        const firebaseConfig = { 
-            databaseURL: "https://simple-chat-8b5d5-default-rtdb.firebaseio.com/" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        function send() {
-            const input = document.getElementById('msgInput');
-            if(input.value.trim() !== "") {
-                db.ref("global_chats").push({ text: input.value, sender: "admin" });
-                input.value = "";
-            }
-        }
-
-        db.ref("global_chats").on("value", (snap) => {
-            const box = document.getElementById("messages");
-            box.innerHTML = "";
-            snap.forEach(child => {
-                const data = child.val();
-                const div = document.createElement("div");
-                div.classList.add("msg", data.sender === "admin" ? "sent" : "received");
-                div.innerText = data.text;
-                box.appendChild(div);
-            });
-            box.scrollTop = box.scrollHeight;
+  <script>
+    function loadMessages() {
+      fetch("http://localhost:3000/messages")
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("messages").innerHTML = "";
+          data.forEach(m => {
+            document.getElementById("messages").innerHTML += `
+              <div style="border:1px solid #000; margin:10px; padding:10px">
+                <p><b>User:</b> ${m.text}</p>
+                <p><b>Reply:</b> ${m.reply || "No reply yet"}</p>
+                <input id="r${m.id}" placeholder="Reply"/>
+                <button onclick="reply(${m.id})">Send</button>
+              </div>
+            `;
+          });
         });
-    </script>
+    }
+
+    function reply(id) {
+      fetch("http://localhost:3000/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          reply: document.getElementById("r" + id).value
+        })
+      }).then(loadMessages);
+    }
+
+    loadMessages();
+  </script>
 </body>
 </html>
