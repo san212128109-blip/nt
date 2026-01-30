@@ -1,26 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>My Messenger</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Messenger</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: Arial; background: #f0f2f5; }
-        #chat-box { width: 400px; height: 500px; background: white; margin: 50px auto; border-radius: 10px; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #messages { flex: 1; padding: 20px; overflow-y: auto; }
-        .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 70%; }
-        .sent { background: #0084ff; color: white; align-self: flex-end; margin-left: auto; }
-        .received { background: #e4e6eb; color: black; }
-        #input-area { display: flex; padding: 10px; border-top: 1px solid #ddd; }
-        input { flex: 1; padding: 10px; border: none; outline: none; }
-        button { background: #0084ff; color: white; border: none; padding: 10px; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #chat-container { width: 100%; max-width: 400px; height: 80vh; background: white; border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.1); overflow: hidden; }
+        #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
+        .msg { margin-bottom: 10px; padding: 10px 15px; border-radius: 20px; font-size: 14px; max-width: 75%; word-wrap: break-word; }
+        .sent { align-self: flex-end; background-color: #0084ff; color: white; }
+        .received { align-self: flex-start; background-color: #e4e6eb; color: black; }
+        #input-area { padding: 15px; display: flex; border-top: 1px solid #eee; }
+        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        button { background: none; border: none; color: #0084ff; font-weight: bold; margin-left: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div id="chat-box">
-        <div id="messages"></div>
-        <div id="input-area">
-            <input type="text" id="msgInput" placeholder="Aa">
-            <button onclick="send()">Send</button>
-        </div>
+
+<div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-area">
+        <input type="text" id="messageInput" placeholder="Aa" autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
     </div>
+</div>
+
+<script>
+    // 1. Tomar Firebase Config eikhane boshau
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. Message Pathano
+    function sendMessage() {
+        const msgText = document.getElementById('messageInput').value;
+        if (msgText !== "") {
+            db.ref("messages").push().set({
+                text: msgText,
+                sender: "me" // Eikhane tumi user name system add korte paro
+            });
+            document.getElementById('messageInput').value = "";
+        }
+    }
+
+    // 3. Database theke message ana (Real-time)
+    db.ref("messages").on("child_added", (snapshot) => {
+        const data = snapshot.val();
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("msg");
+        messageDiv.classList.add(data.sender === "me" ? "sent" : "received");
+        messageDiv.innerText = data.text;
+        document.getElementById("messages").appendChild(messageDiv);
+        
+        // Auto scroll to bottom
+        const chatBox = document.getElementById("messages");
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
+</script>
+
 </body>
 </html>
