@@ -1,46 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Messenger - User</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Messenger</title>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="header">Support Chat</div>
-        <div id="chatBox" class="chat-box"></div>
-        <div class="input-area">
-            <input type="text" id="msgInput" placeholder="Write a message..." onkeypress="handleEnter(event, 'user')">
-            <button onclick="sendMsg('user')">Send</button>
-        </div>
-    </div>
+  <h2>User Messenger</h2>
 
-    <script>
-        function loadMessages() {
-            const chatBox = document.getElementById('chatBox');
-            const chats = JSON.parse(localStorage.getItem('cloud_chats')) || [];
-            chatBox.innerHTML = chats.map(c => `
-                <div class="msg ${c.sender === 'user' ? 'user-msg' : 'admin-msg'}">
-                    ${c.text}
-                </div>
-            `).join('');
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+  <input id="msg" placeholder="Type message" />
+  <button onclick="sendMsg()">Send</button>
 
-        function sendMsg(sender) {
-            const input = document.getElementById('msgInput');
-            if (!input.value.trim()) return;
-            const chats = JSON.parse(localStorage.getItem('cloud_chats')) || [];
-            chats.push({ sender, text: input.value });
-            localStorage.setItem('cloud_chats', JSON.stringify(chats));
-            input.value = '';
-            loadMessages();
-        }
-
-        function handleEnter(e, sender) { if (e.key === 'Enter') sendMsg(sender); }
-        setInterval(loadMessages, 1000);
-        loadMessages();
-    </script>
+  <script>
+    function sendMsg() {
+      fetch("http://localhost:3000/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: document.getElementById("msg").value
+        })
+      });
+      alert("Message sent!");
+      document.getElementById("msg").value = "";
+    }
+  </script>
 </body>
 </html>
