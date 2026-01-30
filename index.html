@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Messenger</title>
+    <style>
+        body { font-family: Arial; background: #f0f2f5; }
+        #chat-box { width: 400px; height: 500px; background: white; margin: 50px auto; border-radius: 10px; display: flex; flex-direction: column; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #messages { flex: 1; padding: 20px; overflow-y: auto; }
+        .msg { padding: 8px 12px; margin: 5px; border-radius: 15px; max-width: 70%; }
+        .sent { background: #0084ff; color: white; align-self: flex-end; margin-left: auto; }
+        .received { background: #e4e6eb; color: black; }
+        #input-area { display: flex; padding: 10px; border-top: 1px solid #ddd; }
+        input { flex: 1; padding: 10px; border: none; outline: none; }
+        button { background: #0084ff; color: white; border: none; padding: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="chat-box">
+        <div id="messages"></div>
+        <div id="input-area">
+            <input type="text" id="msgInput" placeholder="Aa">
+            <button onclick="send()">Send</button>
+        </div>
+    </div>
+</body>
+</html>
