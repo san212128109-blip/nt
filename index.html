@@ -1,64 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>Chat with Me</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messenger - Chat</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #chat-container { width: 100%; max-width: 400px; height: 85vh; background: white; border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; justify-content: center; height: 100vh; }
+        #chat-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; background: white; }
+        #header { background: #0084ff; color: white; padding: 15px; text-align: center; font-weight: bold; }
         #messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
-        .msg { margin-bottom: 10px; padding: 10px 14px; border-radius: 18px; font-size: 14px; max-width: 75%; }
-        .sent { align-self: flex-end; background-color: #0084ff; color: white; border-bottom-right-radius: 4px; }
-        .received { align-self: flex-start; background-color: #e4e6eb; color: black; border-bottom-left-radius: 4px; }
-        #input-area { padding: 15px; display: flex; border-top: 1px solid #eee; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        button { background: none; border: none; color: #0084ff; font-weight: bold; margin-left: 10px; cursor: pointer; }
+        .msg { margin-bottom: 10px; padding: 10px 15px; border-radius: 20px; font-size: 14px; max-width: 75%; }
+        .sent { align-self: flex-end; background: #0084ff; color: white; border-bottom-right-radius: 2px; }
+        .received { align-self: flex-start; background: #e4e6eb; color: black; border-bottom-left-radius: 2px; }
+        #input-area { display: flex; padding: 10px; border-top: 1px solid #ddd; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; }
+        button { background: none; border: none; color: #0084ff; font-weight: bold; cursor: pointer; margin-left: 10px; }
     </style>
 </head>
 <body>
     <div id="chat-container">
+        <div id="header">Support Chat</div>
         <div id="messages"></div>
         <div id="input-area">
-            <input type="text" id="messageInput" placeholder="Aa" autocomplete="off">
-            <button onclick="sendMessage()">Send</button>
+            <input type="text" id="msgInput" placeholder="Aa" onkeypress="if(event.key==='Enter')send()">
+            <button onclick="send()">Send</button>
         </div>
     </div>
 
     <script>
-        // *** EIKHANE TOMAR FIREBASE CONFIG BOSHATEI HOBE ***
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        const firebaseConfig = { databaseURL: "https://messenger-demo-default-rtdb.firebaseio.com/" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function sendMessage() {
-            const msgInput = document.getElementById('messageInput');
-            if (msgInput.value.trim() !== "") {
-                db.ref("messages").push().set({
-                    text: msgInput.value,
-                    sender: "user",
-                    time: Date.now()
-                });
-                msgInput.value = "";
+        function send() {
+            const input = document.getElementById('msgInput');
+            if(input.value.trim() !== "") {
+                db.ref("chats").push({ text: input.value, sender: "user" });
+                input.value = "";
             }
         }
 
-        db.ref("messages").on("child_added", (snapshot) => {
-            const data = snapshot.val();
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("msg", data.sender === "user" ? "sent" : "received");
-            messageDiv.innerText = data.text;
-            document.getElementById("messages").appendChild(messageDiv);
+        db.ref("chats").on("child_added", (snap) => {
+            const data = snap.val();
+            const div = document.createElement("div");
+            div.classList.add("msg", data.sender === "user" ? "sent" : "received");
+            div.innerText = data.text;
+            document.getElementById("messages").appendChild(div);
             document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
         });
     </script>
